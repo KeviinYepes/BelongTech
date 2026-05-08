@@ -13,7 +13,19 @@ export default function LoginPage() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
-    function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    function getApiUrl() {
+        if (process.env.NEXT_PUBLIC_API_URL) {
+            return process.env.NEXT_PUBLIC_API_URL;
+        }
+
+        if (typeof window === "undefined") {
+            return "http://localhost:3001";
+        }
+
+        return `http://${window.location.hostname}:3001`;
+    }
+
+    async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         // Prevent the browser from reloading the page on form submit.
         event.preventDefault();
 
@@ -39,11 +51,33 @@ export default function LoginPage() {
         // loading=true updates the button UI and disables extra clicks.
         setLoading(true);
 
-        setTimeout(() => {
-            setLoading(false);
-            // push() changes the route programmatically.
+        try {
+            const response = await fetch(`${getApiUrl()}/auth/login`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email: normalizedEmail,
+                    password,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setError(data.message ?? "No fue posible iniciar sesion.");
+                return;
+            }
+
+            sessionStorage.setItem("auth_user", JSON.stringify(data.user));
             router.push("/dashboard");
-        }, 1500);
+            return;
+        } catch {
+            setError("No fue posible conectar con el backend.");
+        } finally {
+            setLoading(false);
+        }
     }
 
     return (
@@ -79,7 +113,7 @@ export default function LoginPage() {
 
                     <div className="flex flex-col gap-2">
                         <label className="text-sm font-medium text-slate-200">
-                            Password
+                            Contrasena
                         </label>
                         <input
                             type="password"
