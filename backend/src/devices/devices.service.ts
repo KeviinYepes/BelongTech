@@ -5,13 +5,45 @@ import { PrismaService } from '../prisma/prisma.service';
 export class DevicesService {
   constructor(private readonly prisma: PrismaService) {} //instancia de PrismaService
 
+  private readonly deviceRelations = {
+    brand: {
+      select: {
+        id: true,
+        name: true,
+      },
+    },
+    category: {
+      select: {
+        id: true,
+        name: true,
+      },
+    },
+    place: {
+      select: {
+        id: true,
+        name: true,
+      },
+    },
+    user: {
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    },
+  } as const;
+
   async findAll() {
-    return this.prisma.device.findMany();  //this.prisma.device.findmany() = SELECT * FROM divce
+    return this.prisma.device.findMany({
+      include: this.deviceRelations,
+      orderBy: { id: 'asc' },
+    });  //this.prisma.device.findmany() = SELECT * FROM divce
   }
 
   async findOne(id: number) {
     const device = await this.prisma.device.findUnique({
       where: { id },
+      include: this.deviceRelations,
     });
 
     if (!device) {
@@ -37,6 +69,7 @@ export class DevicesService {
   }) {
     return this.prisma.device.create({ //this.prisma.device.create is an INSERT INTO device
         data,
+        include: this.deviceRelations,
     });
   }
 
@@ -61,6 +94,7 @@ export class DevicesService {
     return this.prisma.device.update({
         where: {id },
         data,
+        include: this.deviceRelations,
     });
   }
 
