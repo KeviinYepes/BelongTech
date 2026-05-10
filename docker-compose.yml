@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16
+    container_name: inventario_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: belongtech
+      POSTGRES_USER: admin_user
+      POSTGRES_PASSWORD: admin_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin_user -d belongtech"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
